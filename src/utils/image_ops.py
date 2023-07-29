@@ -5,6 +5,14 @@ from PIL import Image
 
 
 def rgb_to_grayscale(input_path: Path) -> np.ndarray:
+    """Opens image and converts it to grayscale valued numpy array.
+
+    Args:
+        input_path (Path): path to the image
+
+    Returns:
+        np.ndarray: 2-D numpy array
+    """
     img = Image.open(input_path, "r")
 
     # convert to grayscale
@@ -27,6 +35,15 @@ def image_to_np_array(input_img: Path | Image.Image | np.ndarray) -> np.ndarray:
 
 
 def mix_images(input_images: list[Path | Image.Image | np.ndarray], mixing_matrix: np.ndarray) -> list:
+    """Mix the images using the random mixing matrix.
+
+    Args:
+        input_images (list[Path  |  Image.Image  |  np.ndarray]): list of source images to mix
+        mixing_matrix (np.ndarray): weights of the mixture
+
+    Returns:
+        list: mixed targets, same number of targets as input sources
+    """
 
     matrix_rows, matrix_cols = mixing_matrix.shape
     assert matrix_cols == matrix_rows, "We expect the same number of sources and targets"
@@ -37,14 +54,8 @@ def mix_images(input_images: list[Path | Image.Image | np.ndarray], mixing_matri
 
     # Flatten the images into 1D arrays
     flat_images = [image.flatten() for image in images]
-
     # Combine the flattened images into a single array
-    combined_images = np.vstack(flat_images)
+    combined_images = np.vstack(flat_images).T
+    mixed_images = np.dot(combined_images, mixing_matrix.T)
 
-    # Mix the images using the random mixing matrix
-    mixed_images = np.dot(mixing_matrix, combined_images)
-
-    # Reshape the mixed images back to their original shape
-    mixed_images_list = [mixed_images[i].reshape(images[i].shape) for i in range(len(images))]
-
-    return mixed_images_list
+    return mixed_images
