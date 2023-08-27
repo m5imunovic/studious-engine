@@ -25,22 +25,22 @@ def test_mix_images():
 
     mixing_matrix = np.array([[0.5, 0.5], [0.5, 0.5]])
     mixed_images = mix_images([img1, img2], mixing_matrix=mixing_matrix)
-    assert len(mixed_images) == 2
+    assert mixed_images.shape == (2, 4)
 
-    mixed_img1 = mixed_images[0]
-    expected_mixed_img1 = np.array([[3, 3], [7, 12]])
+    mixed_img1 = mixed_images[0, :]
+    expected_mixed_img1 = np.array([3, 3, 7, 12])
     assert (mixed_img1 == expected_mixed_img1).all()
-    mixed_img2 = mixed_images[1]
-    expected_mixed_img2 = np.array([[3, 3], [7, 12]])
+    mixed_img2 = mixed_images[1, :]
+    expected_mixed_img2 = np.array([3, 3, 7, 12])
     assert (mixed_img2 == expected_mixed_img2).all()
 
     mixing_matrix = np.array([[0.25, 0.75], [0.75, 0.25]])
     mixed_images = mix_images([img1, img2], mixing_matrix=mixing_matrix)
 
-    mixed_img1 = mixed_images[0]
-    expected_mixed_img1 = np.array([[2.5, 3.5], [7.5, 14]])
+    mixed_img1 = mixed_images[0, :]
+    expected_mixed_img1 = np.array([2.5, 3.5, 7.5, 14])
     assert (mixed_img1 == expected_mixed_img1).all()
 
-    mixed_img2 = mixed_images[1]
-    expected_mixed_img2 = np.array([[3.5, 2.5], [6.5, 10]])
+    mixed_img2 = mixed_images[1, :]
+    expected_mixed_img2 = np.array([3.5, 2.5, 6.5, 10])
     assert (mixed_img1 == expected_mixed_img1).all()
