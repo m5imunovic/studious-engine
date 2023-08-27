@@ -1,0 +1,169 @@
+\documentclass{article}
+\usepackage{graphicx} % Required for inserting images
+
+\title{Independent Component Analysis \\ Theoretical Foundation}
+
+\author{Marijo Simunovic}
+\date{August 2023}
+
+\bibliographystyle{plain} % We choose the "plain" reference style
+
+\begin{document}
+
+\maketitle
+
+\section{Introduction}
+
+Independent Component Analysis (ICA) is an umbrella term for a set of mathematical and computational methods where the goal is to separate a multivariate signal (a mixture) into additive components (original signals). These signals are often referred to as independent components (IC). A detailed overview of different approaches can be found in \cite{Hyvarinen2001}.
+ICA is often motivated as a method for solving \textit{cocktail-party problem} \cite{Brown2001} where we want to reconstruct the voices signals of $n$ speakers based on the audio recordings of $n$ microphones.
+Other possible uses include reconstruction of neural activity from EEG recordings \cite{Parker2005}, image sharpening \cite{Kopriva2004} or face recognition \cite{Bartlett2002}.
+
+We can think of ICA as an estimation of generative model \cite{Hyvarinen2000}. The observables are $n$ random variables $x_1$, $x_2$, ..., $x_n$. The assumption is that these random variables are formed as linear combination of $n$ unknown (latent) variables $s_1$, $s_2$, ..., $s_n$. The $i-th$ component is formed as a mixture:
+\begin{equation}
+x_i = a_{i1} * s_1 + a_{i2} * s_2 + ... + a_{in} * s_n;\quad i=1, 2, ..., n.
+\end{equation}
+The mixture coefficients are also unknown. We can write down the same formulation in matrix notation:
+
+\begin{equation}
+    \textbf{x} = \textbf{A} * \textbf{s}
+\end{equation}
+where $\textbf{x}$ and $\textbf{s}$ are $n$-vectors and $\textbf{A}$ is a mixture matrix where $i$-th row contains the
+mixture coefficients of the $x_i$-th variable.
+
+\section{Restrictions of ICA}
+The basic requirement for ICA methods to work is \textit{independence}. It is assumed that the
+independent components are statistically independent. We say that the the random variables are
+independent if their joing probability distribution function (pdf) is equal to the product of their marginal distributions, i.e.
+\begin{equation}
+    p(s_1, s_2, ..., s_n) = p_1(s_1) * p_2(s_2) * ... * p_3(s_n) .
+\end{equation}
+Furthermore, the distributions of independent components need to be \textit{nongaussian}. ICA methods often rely on higher-order cumulants for the estimation of mixture coefficients. These
+higher-order cumulants are zero for gaussian distribution making the application impossible of ICA in this case.
+
+We typically assume that the mixing matrix $A$ is square, i.e. we model the problem in such way that the number of independent components is equal to the number of observed mixtures. Once the mixture matrix is known we can determine the original signals as
+\begin{equation}
+    \textbf{s} = \textbf{A}^{-1} * \textbf{x}
+\end{equation}
+under assumption that the $\textbf{A}$ is invertible.
+
+Once these requirements are satisfied we can determine the original components up to trivial indeterminacies. Firstly, we cannot determine the variances of independent components. Both the
+ICs and mixture coefficients are unknown. Therefore, any scalar multiplier in sources can be canceled by dividing the corresponding entries in mixture matrix:
+\begin{equation}
+    x_i = (\frac{1}{k_1}*a_{i1}) * (s_1*k_1) + ... + (\frac{1}{k_n}*a_{in}) * (s_n*k_n)s;\quad i=1, 2, ..., n.
+\end{equation}
+Due to this fact, we typically fix the magnitudes of mixture components to have unit variance: $E\left[s^{2}\right]=1$. This still leaves us with a sign ambiguity.
+In addition, we cannot determine order of independent components as we can arbitrarily permute the independent components:
+\begin{equation}
+    \textbf{x} = \textbf{A} * \textbf{P}^{-1} * \textbf{P} * \textbf{s}
+\end{equation}
+Here $\textbf{P}$ is permutation matrix (entries are 1s and 0s) and $\textbf{P} * \textbf{s}$ is the original vector $\textbf{s}$ with changed order of entries $s_i$. Matrix $\textbf{A} * \textbf{P}^{-1}$ is a new mixture matrix $\textbf{M}$ to be determined by ICA methods.
+
+\section{ICA and Gaussian Distributions}
+In case of Gaussian distribution first two moments are enough to sufficiently characterize the random variable. First moment is mean:
+
+\begin{equation}
+\mu_x = E\left[x\right] = \int_{-\infty}^\infty x * p_x(x) dx
+\end{equation}
+and second is variance, defined as:
+\label{1ord}
+\begin{equation}
+\sigma_x^2 = E\left[(x-\mu_x)^2\right] = \int_{-\infty}^\infty (x-\mu_x)^2 * p_x(x) dx
+\label{2ord}
+\end{equation}.
+By extension we define $n$-th order moment as:
+\label{nord}
+\begin{equation}
+v^n = E\left[(x-\mu_x)^n\right] = \int_{-\infty}^\infty (x-\mu_x)^n * p_x(x) dx.
+\end{equation}
+From the Central Limit Theorem it follows that the distribution of the of the sum of  centralized independent and identically distributed  random variables converges against the standard normal distribution. The task of ICA is to reconstruct the original signals from a mixture. Therefore, when we are trying to reconstruct the mixing matrix we would like to check that the resulting signals are less Gaussian than the observed mixture.
+Another aspect worth considering is that the linear mixture of two Gaussian random variables results in new Gaussian distribution. This makes it impossible to infer if the original signals contained a single or multiple Gaussian distributed sources. Therefore, ICA methods are useful if only at most one source signal was Gaussian distributed.
+One measure of gaussianity is \textit{kurtosis}. Kurtosis is fourth order momenth statistics:
+\begin{equation}
+    \kappa = v_4 = \frac{E\left[(x-\mu_x)^4\right] }{\sigma^4}
+\end{equation}
+The kurtosis of a Gaussian is equal to 3. A distribution with a positive kurtosis ($>3$) is called super-Gaussian (or leptokurtic) and distribution with negative kurtosis ($<3$) is sub-Gaussian (or platykurtic).
+
+In practice, we use approximations of the above equations, with mean as
+\begin{equation}
+    \mu_x = \frac{1}{M}\sum_{i=1}^{M}x_i
+\end{equation}
+variance as
+\begin{equation}
+    \sigma^2(x) = \frac{1}{M}\sum_{i=1}^{M}(x_i - \mu_x)^2
+\end{equation}
+and finally kurtosis as:
+\begin{equation}
+    \kappa(x) = \frac{1}{M}\sum_{i=1}^{M}\left(\frac{x_i - \mu_x}{\sigma}\right)^4
+\end{equation}
+It is visible from the equation that the kurtosis is quite sensitive to the outliers. Entries far away from mean will dominate the summation due to the exponent. Instead of using kurtosis, it is common to measure the non-gaussianity using \textit{negentropy}. Negentropy $J$ is defined as:
+\begin{equation}
+    J = H(y_{gauss}) - H(y)
+\end{equation}
+where $y_{gauss}$ is a Gaussian random variable of same covariance matrix as $y$. H denotes entropy of random variable. In discrete case it is defined as:
+\begin{equation}
+    H(Y) = -\sum_{i}P(Y=a_i)logP(Y=a_i)
+\end{equation}
+where $a_i$ are all possible realizations of $Y$. Among all distributions of the same variance, Gaussian has the highest entropy \cite{Cover1991}. Therefore, negentropy is always greater or equal to zero (in case $y$ is also Gaussian). The more the distribution is concentrated on a specific set of values the lower is the entropy. This motivates the usage of negentropy as a measure of distance from the Gaussian distribution. There are problems with using negentropy directly in practice. Estimating negentropy would required an estimate of \textit{pdf} which is often computationaly difficult problem.
+Classicaly, negentropy can be approximated as:
+\begin{equation}
+    J(y) \approx \frac{1}{12}E\left[y^3\right] - \frac{1}{48}kurt(y)^2
+\end{equation}
+This approximation still suffers from the sensitivity of kurtosis to outliers. The researchers have therefore come up with more robust approximations based on the maximization of entropy \cite{Langlois2010}, of the form:
+\begin{equation}
+    J(y) \approx (E\left[G(y)\right] -  E\left[G(\nu)\right])^2
+\end{equation}
+Choosing $G$ wisely, i.e. using a slowly growing function one obtains robust estimators:
+\begin{equation}
+    G(u) = \frac{1}{a_1}log cosh (a_1 * u)
+\end{equation}
+where  $1 \leq a_1 \leq 2$, or
+\begin{equation}
+    G(u) = -exp (-\frac{u^2}{2})
+\end{equation}
+
+
+
+\section{Whitening}
+Given some random variables, it is straightforward to linearly transform them into uncorrelated variables.
+Two random variables are uncorrelated if their covariance is zero:
+\begin{equation}
+    cov(y_1, y_2) = E\left[y_1*y_2\right] - E\left[y_1\right] * E\left[*y_2\right] = 0
+\end{equation}
+When working with ICA methods we typically centralize the data so we can safely assume that the mean of
+random variables are equal to $0$. In that case, covariance is equal to correlation and uncorelatedness is the same thing as zero correlation.
+A slightly stronger property, \textit{whiteness}, of a zero mean random vector $y$ means that the components of the vector are uncorrelated and that their variance is equal unity. Therefore, the covariance (and correlation) matrix is identity matrix $I$. We can use various methods to whiten a vector.
+Commonly, this is done using the SVD decomposition of covariance matrix or eigenvalue decomposition of covariance matrix. Whitening operation transform the original mixing matrix into a new, orthogonal mixing matrix $V'$:
+\begin{equation}
+    y = V * z = V * A * s = V' * s
+\end{equation}
+This constraints the search space of a mixing matrix to a space of orthogonal matrices. An orthogonal matrix contains $\frac{n * (n-1)}{2}$ degrees of freedom. In higher dimensional spaces, orthogonal matrices have half a number of parameters in comparison to the arbitrary mixing matrix that we would like
+to estimate.
+
+\section{FastICA}
+Fast ICA  \cite{Hyvarinen1997} uses a fixed-point iteration scheme for finding maximum of non-gaussianity of $\textbf{w}^T * x$ \cite{Hyvarinen1997}.
+The input data $x$ is assumed to be centered and whitened.
+We set the random weight vector $w$ and normalize it such that $||w|| = 1$. Then we calculate the new
+weight vector as
+\begin{equation}
+    w_{new} = E\left[x*G(w^T*x)\right] - E\left[G_{prim}(w^T*x)\right] * w
+\end{equation}
+A detailed derivation of the vector update rule is given in \cite{Hyvarinen2000}. The new weight vector is normalized and compared to the old value. The convergence is defined as a dot-product which is equal to $1$ (within a given tolerance) ignoring the sign of the dot product as we can define the ICs only up to a multiplicative constant. Geometrical interpretation is that the angle between two consecutive vector updates stays under some predefined value.
+
+This algorithm estimates only a single independent component. If we want to extend the algorithm for multiple components we also need to ensure that the weight vectors are decorrelated in order to prevent
+convergence to the same vector. A simple way to achieve this is Gramm-Schmidt method. If we have estimated
+up to $w_{p-1}$ weight vectors, we can orthogonalize the vector $w_p$ as follows:
+\begin{equation}
+    w_p = w_p - \sum_{i=i}^{p-1}(w_{p}^T*w_i)*w_i
+\end{equation}
+The alternative is to perform symmetric decorrelation of all vectors at the same time using following update rule:
+\begin{equation}
+    W = (W*W^T)^{-\frac{1}{2
+    }}*W
+\end{equation}
+where $W$ is unmixing matrix we are trying to estimate.
+
+We tested the implementation with mixture of the images from recently published synthetic dataset \cite{bae2023digiface1m} and two randomly generated signals with Gaussian and Poisson distribution, respectively. The notebook with the example is available under https://github.com/m5imunovic/studious-engine/notebooks/ICAApplication.ipynb
+
+\bibliography{references_ICA}
+
+\end{document}
