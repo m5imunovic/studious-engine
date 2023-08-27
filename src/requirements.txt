@@ -1,6 +1,9 @@
 jupyter
 matplotlib
 numpy
+nbconvert[qtpdf]
+scikit-learn
 Pillow
+pandoc
 pre-commit
 seaborn
