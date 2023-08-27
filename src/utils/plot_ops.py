@@ -4,34 +4,41 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 
-def plot_dependency(images: list[np.ndarray], normalize: bool = True):
+def plot_dependency(signals: list[np.ndarray], titles: list[str] = None, normalize: bool = True):
     """Plot dependency of pairwise combinations of images.
 
     Args:
-        images (list[np.ndarray]): List of images to mix
+        signals (list[np.ndarray]): List of images to mix
+        titles (list[str]): list of titles for plots
         normalize (bool, optional): Normalize images to range [0, 1]
     """
 
-    all_comb = list(combinations(range(len(images)), 2))
+    for sig_idx, images in enumerate(signals):
 
-    assert (all(image.dtype == np.uint8) for image in images)
+        all_comb = list(combinations(range(len(images)), 2))
 
-    if normalize:
-        images = [(image / 255) for image in images]
+        def norm(image: np.ndarray) -> np.ndarray:
+            min_val = image.min()
+            max_val = image.max()
+            return (image - min_val) / (max_val - min_val)
 
-    _, ax = plt.subplots(nrows=1, ncols=len(all_comb), figsize=[20, 3], squeeze=False)
-    # _, ax = plt.subplots(1, len(all_comb), figsize=[18, 10])
+        if normalize:
+            images = [norm(image) for image in images]
 
-    print(type(ax))
+        _, ax = plt.subplots(nrows=1, ncols=len(all_comb), figsize=[4, 3], squeeze=False)
 
-    for idx in range(len(all_comb)):
-        iidx1, iidx2 = all_comb[idx]
-        ax[0][idx].scatter(images[iidx1], images[iidx2])
-        ax[0][idx].tick_params(labelsize=12)
-        ax[0][idx].set_title(f"Sources {iidx1} - {iidx2}", fontsize=14)
-        ax[0][idx].set_xlim([-0.1, 1.1])
-        ax[0][idx].set_ylim([-0.1, 1.1])
-        # ax[0][idx].set_xticks([])
-        # ax[0][idx].set_yticks([])
+        for idx in range(len(all_comb)):
+            iidx1, iidx2 = all_comb[idx]
+            ax[0][idx].scatter(images[iidx1], images[iidx2])
+            ax[0][idx].tick_params(labelsize=12)
+            if titles is None:
+                ax[0][idx].set_title(f"Sources {iidx1} - {iidx2}", fontsize=14)
+            else:
+                ax[0][idx].set_title(titles[sig_idx], fontsize=14)
+
+            # ax[0][idx].set_xlim([-0.1, 1.1])
+            # ax[0][idx].set_ylim([-0.1, 1.1])
+            ax[0][idx].set_xticks([])
+            ax[0][idx].set_yticks([])
 
     plt.show()

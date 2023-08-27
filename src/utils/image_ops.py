@@ -31,7 +31,15 @@ def image_to_np_array(input_img: Path | Image.Image | np.ndarray) -> np.ndarray:
         input_img = Image.open(input_img, "r")
 
     img_np = np.array(input_img)
+
     return img_np
+
+
+def normalize_image(x: np.ndarray) -> np.ndarray:
+    x = np.float32(x)
+    x = x - x.min()
+    x /= x.max()
+    return x
 
 
 def mix_images(input_images: list[Path | Image.Image | np.ndarray], mixing_matrix: np.ndarray) -> list:
@@ -55,7 +63,7 @@ def mix_images(input_images: list[Path | Image.Image | np.ndarray], mixing_matri
     # Flatten the images into 1D arrays
     flat_images = [image.flatten() for image in images]
     # Combine the flattened images into a single array
-    combined_images = np.vstack(flat_images).T
-    mixed_images = np.dot(combined_images, mixing_matrix.T)
+    combined_images = np.vstack(flat_images)
+    mixed_images = np.dot(mixing_matrix, combined_images)
 
     return mixed_images
