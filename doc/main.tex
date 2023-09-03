@@ -1,5 +1,6 @@
 \documentclass{article}
 \usepackage{graphicx} % Required for inserting images
+\usepackage{hyperref}
 
 \title{Independent Component Analysis \\ Theoretical Foundation}
 
@@ -33,10 +34,23 @@ mixture coefficients of the $x_i$-th variable.
 \section{Restrictions of ICA}
 The basic requirement for ICA methods to work is \textit{independence}. It is assumed that the
 independent components are statistically independent. We say that the the random variables are
-independent if their joing probability distribution function (pdf) is equal to the product of their marginal distributions, i.e.
+independent if their joint probability distribution function (pdf) is equal to the product of their marginal distributions, i.e.
 \begin{equation}
     p(s_1, s_2, ..., s_n) = p_1(s_1) * p_2(s_2) * ... * p_3(s_n) .
 \end{equation}
+Two vectors $s_1$ and $s_2$ are linearly independent if there is no non-zero scalar $a$ such that
+\begin{equation}
+    a*s_1 + s_2 = 0
+\end{equation}
+Geometrically, vectors $s_1$ and $s_2$ do not lie on the same line. If two vectors are \textit{statistically} independent their covariance is:
+\begin{equation}
+    cov(s_1, s_2) = 0
+\end{equation}
+For two \textit{linearly} dependent vectors
+\begin{equation}
+    cov(s_1, s_2) = cov(\frac{1}{a} * s_1, s_2) = \frac{1}{a} var(s_2) \neq 0.
+\end{equation}
+Therefore, two \textit{linearly} dependent vectors cannot be statistically independent (linear independence of vectors, however, is not guarantee of their statistical independence).
 Furthermore, the distributions of independent components need to be \textit{nongaussian}. ICA methods often rely on higher-order cumulants for the estimation of mixture coefficients. These
 higher-order cumulants are zero for gaussian distribution making the application impossible of ICA in this case.
 
@@ -58,7 +72,49 @@ In addition, we cannot determine order of independent components as we can arbit
 \end{equation}
 Here $\textbf{P}$ is permutation matrix (entries are 1s and 0s) and $\textbf{P} * \textbf{s}$ is the original vector $\textbf{s}$ with changed order of entries $s_i$. Matrix $\textbf{A} * \textbf{P}^{-1}$ is a new mixture matrix $\textbf{M}$ to be determined by ICA methods.
 
-\section{ICA and Gaussian Distributions}
+\subsection{Independent components with time structure}
+If independent components are time signals the ICA model is:
+\begin{equation}
+    x(t) = A * s(t)
+\label{ica_temporal}
+\end{equation}
+If the data has time-dependencies the autocovariance values are often different from zero:
+\begin{equation}
+    cov(x_i(t), x_i(t-\tau)) \neq 0, \quad \tau = 1, 2, 3, ...
+\end{equation}
+When source signals have time structure (colored statistics) they are even allowed to be Gaussian.
+There are enough equations to solve the blind source separation problem without high-order statistics.
+In addition to the autocovariances, we are also interested into covariance values between different signals, i.e $cov(x_i(t), x_j(t-\tau))$, where $i \neq j$. We can write down all these statistics using time-lagged covariance matrix of mixed signals:
+\begin{equation}
+    C_{\tau}^{\textbf{x}} = E\left[\textbf{x}(t)*\textbf{x}(t-\tau)^T\right]
+\label{covariance_mix}
+\end{equation}
+and independent components
+\begin{equation}
+    C_{\tau}^{\textbf{s}} = E\left[\textbf{s}(t)*\textbf{s}(t-\tau)^T\right].
+\label{covariance_source}
+\end{equation}
+The matrix $C_{\tau}^{\textbf{s}}$ is diagonal due to the independence of the sources.
+
+Typically, when we are doing the reconstruction we first whiten the mixture data (see \ref{ch:whitening} in this document for the introduction to whitening) and we are working
+on whitened data $z(t)$. We aim to find an unmixing orthogonal matrix $W$ which will reconstruct original signals
+\begin{equation}
+    W*\textbf{z}(t-\tau) = \textbf{s}(t-\tau), \quad \tau=0, 1, 2, 3...
+\label{temporal_unmix}
+\end{equation}
+From (\ref{covariance_source}) and using (\ref{temporal_unmix}) it follows:
+\begin{equation}
+    C_{\tau}^{\textbf{z}} = W^T * E\left[\textbf{s}(t)*\textbf{s}(t-\tau)^T\right] * W = W^T * C_{\tau}^{\textbf{s}} * W
+\end{equation}
+This means that the matrix $W$ is part of the eigenvalue decomposition of $ C_{\tau}^{\textbf{z}}$
+We can therefore have a simple algorithm \cite{Tong1991} to compute matrix $W$: \\
+1. whiten the centered data $\textbf{x}(t)$ to obtain $\textbf{z}(t)$. \\
+2. Compute eigenvalue decomposition of time-lagged covariance matrix $C_{\tau}^{\textbf{z}}$ for some time lag $\tau$. \\
+3. The rows of the separating matrix $W$ are given by eigenvectors of decomposition in step 2.
+
+The algorithm works as long as the eigenvalues are uniquely defined - this is true if and only if the lagged covariances are different for all the ICs.  One can search for a suitable time lag where this condition is satisfied. However, if the ICs have identical power spectra (identical autocovariances) they cannot be estimated using this method.
+
+\section{ICA and Gaussian Distributions}.
 In case of Gaussian distribution first two moments are enough to sufficiently characterize the random variable. First moment is mean:
 
 \begin{equation}
@@ -76,7 +132,8 @@ By extension we define $n$-th order moment as:
 v^n = E\left[(x-\mu_x)^n\right] = \int_{-\infty}^\infty (x-\mu_x)^n * p_x(x) dx.
 \end{equation}
 From the Central Limit Theorem it follows that the distribution of the of the sum of  centralized independent and identically distributed  random variables converges against the standard normal distribution. The task of ICA is to reconstruct the original signals from a mixture. Therefore, when we are trying to reconstruct the mixing matrix we would like to check that the resulting signals are less Gaussian than the observed mixture.
-Another aspect worth considering is that the linear mixture of two Gaussian random variables results in new Gaussian distribution. This makes it impossible to infer if the original signals contained a single or multiple Gaussian distributed sources. Therefore, ICA methods are useful if only at most one source signal was Gaussian distributed.
+Another aspect worth considering is that the linear mixture of two Gaussian random variables results in new Gaussian distribution. This makes it impossible to infer if the original signals contained a single or multiple Gaussian distributed sources. Therefore, ICA methods are useful if only at most one source signal was Gaussian distributed (with already mentioned exception to the methods that use time structure of signals).
+
 One measure of gaussianity is \textit{kurtosis}. Kurtosis is fourth order momenth statistics:
 \begin{equation}
     \kappa = v_4 = \frac{E\left[(x-\mu_x)^4\right] }{\sigma^4}
@@ -122,8 +179,8 @@ where  $1 \leq a_1 \leq 2$, or
 \end{equation}
 
 
-
 \section{Whitening}
+\label{ch:whitening}
 Given some random variables, it is straightforward to linearly transform them into uncorrelated variables.
 Two random variables are uncorrelated if their covariance is zero:
 \begin{equation}
@@ -162,7 +219,8 @@ The alternative is to perform symmetric decorrelation of all vectors at the same
 \end{equation}
 where $W$ is unmixing matrix we are trying to estimate.
 
-We tested the implementation with mixture of the images from recently published synthetic dataset \cite{bae2023digiface1m} and two randomly generated signals with Gaussian and Poisson distribution, respectively. The notebook with the example is available under https://github.com/m5imunovic/studious-engine/notebooks/ICAApplication.ipynb
+We tested the implementation with mixture of the images from recently published synthetic dataset \cite{bae2023digiface1m} and two randomly generated signals with Gaussian and Poisson distribution, respectively. The notebook with the example is available under: \\
+https://github.com/m5imunovic/studious-engine/notebooks/ICAApplication.ipynb
 
 \bibliography{references_ICA}
 
